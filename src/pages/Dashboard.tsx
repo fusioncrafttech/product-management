@@ -1,188 +1,249 @@
-import React from 'react';
-import { Calendar, Users, DollarSign, TrendingUp, Plus, ArrowRight } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import Button from '../components/Button';
-import StatusBadge from '../components/StatusBadge';
-import { appointments } from '../data/appointments';
-import { doctors } from '../data/doctors';
-import { invoices } from '../data/invoices';
+import { motion } from "framer-motion";
+import {
+  Calendar,
+  DollarSign,
+  Stethoscope,
+  Users,
+  ArrowUpRight,
+  Clock,
+  Plus,
+} from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { StatsCard } from "@/components/common/StatsCard";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { appointments } from "@/data/appointments";
+import { reportsData } from "@/data/reports";
 
-const Dashboard: React.FC = () => {
-  const totalAppointments = appointments.length;
-  const totalDoctors = doctors.length;
-  const totalRevenue = invoices
-    .filter(inv => inv.status === 'Paid')
-    .reduce((sum, inv) => sum + inv.amount, 0);
-  const pendingInvoices = invoices.filter(inv => inv.status === 'Unpaid').length;
+const revenueData = reportsData.monthlyRevenue;
+const appointmentData = reportsData.appointmentStats;
 
+export default function Dashboard() {
   const recentAppointments = appointments.slice(0, 5);
-
-  const stats = [
-    {
-      title: 'Total Appointments',
-      value: totalAppointments,
-      icon: Calendar,
-      color: 'bg-blue-500',
-      change: '+12%',
-      changeType: 'positive'
-    },
-    {
-      title: 'Total Doctors',
-      value: totalDoctors,
-      icon: Users,
-      color: 'bg-green-500',
-      change: '+2',
-      changeType: 'positive'
-    },
-    {
-      title: 'Total Revenue',
-      value: `$${totalRevenue.toLocaleString()}`,
-      icon: DollarSign,
-      color: 'bg-purple-500',
-      change: '+18%',
-      changeType: 'positive'
-    },
-    {
-      title: 'Pending Invoices',
-      value: pendingInvoices,
-      icon: TrendingUp,
-      color: 'bg-orange-500',
-      change: '-5%',
-      changeType: 'negative'
-    }
-  ];
-
-  const quickActions = [
-    { label: 'New Appointment', icon: Calendar, path: '/appointments' },
-    { label: 'Add Doctor', icon: Users, path: '/doctors' },
-    { label: 'Create Invoice', icon: DollarSign, path: '/billing' },
-    { label: 'View Reports', icon: TrendingUp, path: '/reports' }
-  ];
+  const upcomingAppointments = appointments.filter((a) => a.status === "confirmed" || a.status === "pending").slice(0, 4);
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        subtitle="Welcome back! Here's what's happening today."
-        actions={
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Quick Action
-          </Button>
-        }
-      />
+        description="Welcome back! Here's what's happening at DentaCare today."
+      >
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          New Appointment
+        </Button>
+      </PageHeader>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon className="w-6 h-6 text-white" />
-              </div>
-              <span className={`text-sm font-medium ${
-                stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {stat.change}
-              </span>
-            </div>
-            <h3 className="mt-4 text-2xl font-bold text-gray-900">{stat.value}</h3>
-            <p className="mt-1 text-sm text-gray-600">{stat.title}</p>
-          </div>
-        ))}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="Total Appointments"
+          value="156"
+          icon={Calendar}
+          trend="+12% from last month"
+          trendUp={true}
+        />
+        <StatsCard
+          title="Revenue"
+          value="$42,500"
+          icon={DollarSign}
+          trend="+8% from last month"
+          trendUp={true}
+          iconColor="text-success"
+        />
+        <StatsCard
+          title="Active Doctors"
+          value="6"
+          icon={Stethoscope}
+          trend="2 on duty today"
+          trendUp={true}
+          iconColor="text-blue-500"
+        />
+        <StatsCard
+          title="Total Patients"
+          value="1,245"
+          icon={Users}
+          trend="+23 this week"
+          trendUp={true}
+          iconColor="text-purple-500"
+        />
+      </div>
+
+      {/* Charts */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Appointment Analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={appointmentData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Bar dataKey="completed" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="cancelled" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Revenue Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#2563eb"
+                    strokeWidth={2}
+                    dot={{ fill: "#2563eb", r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Recent Appointments & Upcoming */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <motion.div
+          className="lg:col-span-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Recent Appointments</CardTitle>
+              <Button variant="ghost" size="sm" className="text-primary">
+                View All
+                <ArrowUpRight className="ml-1 h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Patient</TableHead>
+                    <TableHead className="hidden sm:table-cell">Doctor</TableHead>
+                    <TableHead className="hidden md:table-cell">Service</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentAppointments.map((apt) => (
+                    <TableRow key={apt.id}>
+                      <TableCell className="font-medium">{apt.patientName}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{apt.doctor}</TableCell>
+                      <TableCell className="hidden md:table-cell">{apt.service}</TableCell>
+                      <TableCell>
+                        <Badge variant={apt.status}>{apt.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="text-base">Upcoming Appointments</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {upcomingAppointments.map((apt) => (
+                <div
+                  key={apt.id}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <Clock className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{apt.patientName}</p>
+                    <p className="text-xs text-muted-foreground">{apt.time} • {apt.service}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              className="flex flex-col items-center p-4 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-200 transition-all group"
-            >
-              <div className="p-3 rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors">
-                <action.icon className="w-6 h-6 text-blue-600" />
-              </div>
-              <span className="mt-2 text-sm font-medium text-gray-700">{action.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Recent Appointments */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Appointments</h2>
-            <Button variant="ghost" size="sm">
-              View All
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Patient
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Doctor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Date & Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Service
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {recentAppointments.map((appointment) => (
-                <tr key={appointment.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{appointment.patientName}</p>
-                      <p className="text-sm text-gray-500">{appointment.patientPhone}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {appointment.doctor}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    <div>{appointment.date}</div>
-                    <div className="text-gray-500">{appointment.time}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {appointment.service}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge
-                      status={appointment.status}
-                      variant={
-                        appointment.status === 'Confirmed'
-                          ? 'success'
-                          : appointment.status === 'Pending'
-                          ? 'warning'
-                          : appointment.status === 'Completed'
-                          ? 'info'
-                          : 'danger'
-                      }
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.5 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Button variant="outline" className="h-auto flex-col gap-2 py-4">
+                <Calendar className="h-5 w-5 text-primary" />
+                <span className="text-xs">New Appointment</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex-col gap-2 py-4">
+                <Users className="h-5 w-5 text-primary" />
+                <span className="text-xs">Add Patient</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex-col gap-2 py-4">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <span className="text-xs">Create Invoice</span>
+              </Button>
+              <Button variant="outline" className="h-auto flex-col gap-2 py-4">
+                <Stethoscope className="h-5 w-5 text-primary" />
+                <span className="text-xs">Add Doctor</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
-};
-
-export default Dashboard;
+}

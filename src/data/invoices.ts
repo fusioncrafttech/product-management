@@ -1,73 +1,115 @@
 export interface Invoice {
   id: string;
   patientName: string;
-  invoiceNumber: string;
-  date: string;
+  service: string;
   amount: number;
-  status: 'Paid' | 'Unpaid' | 'Partial';
-  services: string[];
+  date: string;
   dueDate: string;
+  status: "paid" | "unpaid" | "overdue" | "partial";
+  paymentMethod?: string;
 }
 
 export const invoices: Invoice[] = [
   {
-    id: '1',
-    patientName: 'John Smith',
-    invoiceNumber: 'INV-001',
-    date: '2024-01-10',
-    amount: 120,
-    status: 'Paid',
-    services: ['Teeth Cleaning'],
-    dueDate: '2024-01-24'
-  },
-  {
-    id: '2',
-    patientName: 'Emily Davis',
-    invoiceNumber: 'INV-002',
-    date: '2024-01-12',
-    amount: 800,
-    status: 'Unpaid',
-    services: ['Root Canal'],
-    dueDate: '2024-01-26'
-  },
-  {
-    id: '3',
-    patientName: 'Robert Wilson',
-    invoiceNumber: 'INV-003',
-    date: '2024-01-08',
-    amount: 200,
-    status: 'Paid',
-    services: ['Dental Filling'],
-    dueDate: '2024-01-22'
-  },
-  {
-    id: '4',
-    patientName: 'Lisa Anderson',
-    invoiceNumber: 'INV-004',
-    date: '2024-01-14',
-    amount: 350,
-    status: 'Partial',
-    services: ['Teeth Whitening'],
-    dueDate: '2024-01-28'
-  },
-  {
-    id: '5',
-    patientName: 'Maria Garcia',
-    invoiceNumber: 'INV-005',
-    date: '2024-01-15',
-    amount: 150,
-    status: 'Unpaid',
-    services: ['Orthodontic Consultation'],
-    dueDate: '2024-01-29'
-  },
-  {
-    id: '6',
-    patientName: 'David Martinez',
-    invoiceNumber: 'INV-006',
-    date: '2024-01-13',
+    id: "INV001",
+    patientName: "Sarah Johnson",
+    service: "Root Canal Treatment",
     amount: 1200,
-    status: 'Paid',
-    services: ['Dental Crown'],
-    dueDate: '2024-01-27'
-  }
+    date: "2026-05-20",
+    dueDate: "2026-06-20",
+    status: "paid",
+    paymentMethod: "Credit Card",
+  },
+  {
+    id: "INV002",
+    patientName: "James Wilson",
+    service: "Teeth Cleaning",
+    amount: 150,
+    date: "2026-05-22",
+    dueDate: "2026-06-22",
+    status: "unpaid",
+  },
+  {
+    id: "INV003",
+    patientName: "Maria Garcia",
+    service: "Dental Implant",
+    amount: 3500,
+    date: "2026-05-15",
+    dueDate: "2026-06-15",
+    status: "partial",
+    paymentMethod: "Insurance",
+  },
+  {
+    id: "INV004",
+    patientName: "Robert Brown",
+    service: "Teeth Whitening",
+    amount: 450,
+    date: "2026-05-18",
+    dueDate: "2026-06-18",
+    status: "paid",
+    paymentMethod: "Debit Card",
+  },
+  {
+    id: "INV005",
+    patientName: "Lisa Anderson",
+    service: "Orthodontics Consultation",
+    amount: 200,
+    date: "2026-05-10",
+    dueDate: "2026-05-25",
+    status: "overdue",
+  },
+  {
+    id: "INV006",
+    patientName: "David Martinez",
+    service: "Cavity Filling",
+    amount: 300,
+    date: "2026-05-23",
+    dueDate: "2026-06-23",
+    status: "paid",
+    paymentMethod: "Cash",
+  },
+  {
+    id: "INV007",
+    patientName: "Jennifer Lee",
+    service: "Wisdom Tooth Extraction",
+    amount: 800,
+    date: "2026-05-25",
+    dueDate: "2026-06-25",
+    status: "unpaid",
+  },
+  {
+    id: "INV008",
+    patientName: "Michael Taylor",
+    service: "Dental Crown",
+    amount: 950,
+    date: "2026-05-12",
+    dueDate: "2026-05-27",
+    status: "overdue",
+  },
+  {
+    id: "INV009",
+    patientName: "Emily White",
+    service: "Teeth Cleaning",
+    amount: 150,
+    date: "2026-05-26",
+    dueDate: "2026-06-26",
+    status: "unpaid",
+  },
+  {
+    id: "INV010",
+    patientName: "Christopher Davis",
+    service: "Veneer Placement",
+    amount: 2200,
+    date: "2026-05-24",
+    dueDate: "2026-06-24",
+    status: "paid",
+    paymentMethod: "Credit Card",
+  },
 ];
+
+export const revenueSummary = {
+  totalRevenue: 42500,
+  paidAmount: 35200,
+  pendingAmount: 5100,
+  overdueAmount: 2200,
+};

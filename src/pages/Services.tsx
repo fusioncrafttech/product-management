@@ -1,171 +1,201 @@
-import React, { useState } from 'react';
-import { Search, Plus, Clock, DollarSign, Activity } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import Button from '../components/Button';
-import Modal from '../components/Modal';
-import FormInput from '../components/FormInput';
-import FormSelect from '../components/FormSelect';
-import { services } from '../data/services';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Plus, Edit, Clock, DollarSign, Tag } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/common/PageHeader";
+import { SearchBar } from "@/components/common/SearchBar";
+import { FilterDropdown } from "@/components/common/FilterDropdown";
+import { services, serviceCategories } from "@/data/services";
 
-const Services: React.FC = () => {
+export default function Services() {
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [selectedService, setSelectedService] = useState<typeof services[0] | null>(null);
 
-  const filteredServices = services.filter(service => {
-    const matchesSearch = 
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || service.category === categoryFilter;
+  const categoryOptions = serviceCategories.map((cat) => ({ label: cat, value: cat }));
+
+  const filteredServices = services.filter((svc) => {
+    const matchesSearch =
+      svc.name.toLowerCase().includes(search.toLowerCase()) ||
+      svc.description.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = categoryFilter === "All" || svc.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
-  const categories = Array.from(new Set(services.map(s => s.category)));
-
-  const handleAddService = () => {
-    setSelectedService(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditService = (service: typeof services[0]) => {
-    setSelectedService(service);
-    setIsModalOpen(true);
-  };
-
-  const categoryOptions = categories.map(cat => ({ value: cat, label: cat }));
-
   return (
-    <div>
-      <PageHeader
-        title="Services"
-        subtitle="Manage dental services and pricing"
-        actions={
-          <Button onClick={handleAddService}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Service
-          </Button>
-        }
-      />
+    <div className="space-y-6">
+      <PageHeader title="Services" description="Manage dental services and pricing">
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Service
+        </Button>
+      </PageHeader>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search services..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Categories</option>
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchBar
+          placeholder="Search services..."
+          value={search}
+          onChange={setSearch}
+          className="sm:w-72"
+        />
+        <FilterDropdown
+          placeholder="Category"
+          options={categoryOptions}
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+        />
       </div>
 
-      {/* Services Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredServices.map((service) => (
-          <div key={service.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-lg bg-blue-100">
-                  <Activity className="w-6 h-6 text-blue-600" />
-                </div>
-                <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
-                  {service.category}
-                </span>
-              </div>
-              
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.name}</h3>
-              <p className="text-sm text-gray-600 mb-4">{service.description}</p>
-              
-              <div className="space-y-2">
-                <div className="flex items-center text-sm text-gray-700">
-                  <DollarSign className="w-4 h-4 mr-2 text-gray-400" />
-                  <span className="font-semibold">${service.price}</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-700">
-                  <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                  {service.duration}
-                </div>
-              </div>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="w-full"
-                onClick={() => handleEditService(service)}
+      {/* Views */}
+      <Tabs defaultValue="cards">
+        <TabsList>
+          <TabsTrigger value="cards">Cards</TabsTrigger>
+          <TabsTrigger value="table">Price List</TabsTrigger>
+        </TabsList>
+
+        {/* Card View */}
+        <TabsContent value="cards">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredServices.map((service, index) => (
+              <motion.div
+                key={service.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
               >
-                Edit Service
-              </Button>
+                <Card className="hover:shadow-md transition-shadow duration-200 h-full">
+                  <CardContent className="p-6 flex flex-col h-full">
+                    <div className="flex items-start justify-between mb-3">
+                      <Badge variant="secondary">{service.category}</Badge>
+                      {!service.isActive && (
+                        <Badge variant="destructive">Inactive</Badge>
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-foreground text-lg">{service.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 flex-1">{service.description}</p>
+                    <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <DollarSign className="h-4 w-4" />
+                          <span className="font-semibold text-foreground">${service.price}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          <span>{service.duration}</span>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Table View */}
+        <TabsContent value="table">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Service Price List</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead className="hidden sm:table-cell">Duration</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredServices.map((service) => (
+                    <TableRow key={service.id}>
+                      <TableCell className="font-medium">{service.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{service.category}</Badge>
+                      </TableCell>
+                      <TableCell className="font-semibold">${service.price}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{service.duration}</TableCell>
+                      <TableCell>
+                        <Badge variant={service.isActive ? "completed" : "cancelled"}>
+                          {service.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Add Service Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New Service</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="svc-name">Service Name</Label>
+              <Input id="svc-name" placeholder="Enter service name" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="svc-category">Category</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {serviceCategories.filter(c => c !== "All").map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="svc-price">Price ($)</Label>
+                <Input id="svc-price" type="number" placeholder="0" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="svc-duration">Duration</Label>
+              <Input id="svc-duration" placeholder="e.g., 30 min" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="svc-desc">Description</Label>
+              <Textarea id="svc-desc" placeholder="Describe the service..." />
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Add/Edit Service Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={selectedService ? 'Edit Service' : 'Add Service'}
-        size="lg"
-      >
-        <form className="space-y-4">
-          <FormInput
-            label="Service Name"
-            placeholder="Enter service name"
-            defaultValue={selectedService?.name}
-          />
-          <FormSelect
-            label="Category"
-            options={categoryOptions}
-            defaultValue={selectedService?.category}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="Price"
-              type="number"
-              placeholder="Enter price"
-              defaultValue={selectedService?.price}
-            />
-            <FormInput
-              label="Duration"
-              placeholder="e.g., 30 min"
-              defaultValue={selectedService?.duration}
-            />
-          </div>
-          <FormInput
-            label="Description"
-            placeholder="Enter service description"
-            defaultValue={selectedService?.description}
-          />
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              {selectedService ? 'Update' : 'Add'} Service
-            </Button>
-          </div>
-        </form>
-      </Modal>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button onClick={() => setIsModalOpen(false)}>Add Service</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default Services;
+}

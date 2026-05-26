@@ -5,87 +5,127 @@ export interface Service {
   price: number;
   duration: string;
   description: string;
+  isActive: boolean;
 }
 
 export const services: Service[] = [
   {
-    id: '1',
-    name: 'Teeth Cleaning',
-    category: 'General',
-    price: 120,
-    duration: '30 min',
-    description: 'Professional dental cleaning and polishing'
-  },
-  {
-    id: '2',
-    name: 'Root Canal',
-    category: 'Surgical',
-    price: 800,
-    duration: '90 min',
-    description: 'Root canal therapy for infected teeth'
-  },
-  {
-    id: '3',
-    name: 'Dental Filling',
-    category: 'Restorative',
-    price: 200,
-    duration: '45 min',
-    description: 'Composite or amalgam fillings for cavities'
-  },
-  {
-    id: '4',
-    name: 'Teeth Whitening',
-    category: 'Cosmetic',
-    price: 350,
-    duration: '60 min',
-    description: 'Professional teeth whitening treatment'
-  },
-  {
-    id: '5',
-    name: 'Dental Extraction',
-    category: 'Surgical',
-    price: 250,
-    duration: '30 min',
-    description: 'Simple and surgical tooth extraction'
-  },
-  {
-    id: '6',
-    name: 'Dental Crown',
-    category: 'Restorative',
-    price: 1200,
-    duration: '2 visits',
-    description: 'Porcelain or metal crown placement'
-  },
-  {
-    id: '7',
-    name: 'Orthodontic Consultation',
-    category: 'Orthodontics',
+    id: "SRV001",
+    name: "Teeth Cleaning",
+    category: "Preventive",
     price: 150,
-    duration: '45 min',
-    description: 'Initial consultation for braces or aligners'
+    duration: "30 min",
+    description: "Professional dental cleaning to remove plaque and tartar buildup",
+    isActive: true,
   },
   {
-    id: '8',
-    name: 'Gum Treatment',
-    category: 'Periodontal',
+    id: "SRV002",
+    name: "Root Canal Treatment",
+    category: "Restorative",
+    price: 1200,
+    duration: "90 min",
+    description: "Treatment to repair and save a badly damaged or infected tooth",
+    isActive: true,
+  },
+  {
+    id: "SRV003",
+    name: "Dental Implant",
+    category: "Surgical",
+    price: 3500,
+    duration: "120 min",
+    description: "Permanent tooth replacement with titanium implant",
+    isActive: true,
+  },
+  {
+    id: "SRV004",
+    name: "Teeth Whitening",
+    category: "Cosmetic",
+    price: 450,
+    duration: "60 min",
+    description: "Professional whitening treatment for brighter smile",
+    isActive: true,
+  },
+  {
+    id: "SRV005",
+    name: "Orthodontics Consultation",
+    category: "Orthodontics",
+    price: 200,
+    duration: "45 min",
+    description: "Initial consultation for braces or aligners",
+    isActive: true,
+  },
+  {
+    id: "SRV006",
+    name: "Cavity Filling",
+    category: "Restorative",
     price: 300,
-    duration: '60 min',
-    description: 'Treatment for gum disease and gingivitis'
+    duration: "45 min",
+    description: "Composite or amalgam filling for tooth decay",
+    isActive: true,
   },
   {
-    id: '9',
-    name: 'Dental Implant',
-    category: 'Surgical',
-    price: 2500,
-    duration: 'Multiple visits',
-    description: 'Titanium implant for missing teeth'
+    id: "SRV007",
+    name: "Wisdom Tooth Extraction",
+    category: "Surgical",
+    price: 800,
+    duration: "60 min",
+    description: "Surgical removal of wisdom teeth",
+    isActive: true,
   },
   {
-    id: '10',
-    name: 'Dentures',
-    category: 'Prosthodontics',
+    id: "SRV008",
+    name: "Dental Crown",
+    category: "Restorative",
+    price: 950,
+    duration: "60 min",
+    description: "Custom crown to cover and protect a damaged tooth",
+    isActive: true,
+  },
+  {
+    id: "SRV009",
+    name: "Veneer Placement",
+    category: "Cosmetic",
+    price: 2200,
+    duration: "90 min",
+    description: "Porcelain veneers for cosmetic tooth enhancement",
+    isActive: true,
+  },
+  {
+    id: "SRV010",
+    name: "Dental X-Ray",
+    category: "Diagnostic",
+    price: 75,
+    duration: "15 min",
+    description: "Digital dental X-ray for diagnosis",
+    isActive: true,
+  },
+  {
+    id: "SRV011",
+    name: "Gum Treatment",
+    category: "Periodontics",
+    price: 600,
+    duration: "45 min",
+    description: "Treatment for gum disease and inflammation",
+    isActive: true,
+  },
+  {
+    id: "SRV012",
+    name: "Dental Bridge",
+    category: "Restorative",
     price: 1800,
-    duration: 'Multiple visits',
-    description: 'Complete or partial dentures'
-  }
+    duration: "90 min",
+    description: "Fixed bridge to replace missing teeth",
+    isActive: false,
+  },
+];
+
+export const serviceCategories = [
+  "All",
+  "Preventive",
+  "Restorative",
+  "Cosmetic",
+  "Surgical",
+  "Orthodontics",
+  "Diagnostic",
+  "Periodontics",
 ];

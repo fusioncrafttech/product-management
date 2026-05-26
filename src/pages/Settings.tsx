@@ -1,287 +1,259 @@
-import React, { useState } from 'react';
-import { Building2, Bell, Lock, Palette, Users, Save } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import Button from '../components/Button';
-import FormInput from '../components/FormInput';
+import { motion } from "framer-motion";
+import { Save, Building2, Bell, Palette, Lock, Users } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/common/PageHeader";
+import { useTheme } from "@/hooks/useTheme";
 
-const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('clinic');
-  const [saveMessage, setSaveMessage] = useState('');
-
-  const tabs = [
-    { id: 'clinic', label: 'Clinic Profile', icon: Building2 },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'security', label: 'Security', icon: Lock },
-    { id: 'theme', label: 'Theme', icon: Palette },
-    { id: 'users', label: 'User Management', icon: Users }
-  ];
-
-  const handleSave = () => {
-    setSaveMessage('Settings saved successfully!');
-    setTimeout(() => setSaveMessage(''), 3000);
-  };
+export default function Settings() {
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <div>
-      <PageHeader
-        title="Settings"
-        subtitle="Manage clinic settings and preferences"
-      />
+    <div className="space-y-6">
+      <PageHeader title="Settings" description="Manage your clinic settings and preferences" />
 
-      {saveMessage && (
-        <div className="mb-6 p-4 bg-green-100 text-green-700 rounded-lg">
-          {saveMessage}
-        </div>
-      )}
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+          <TabsTrigger value="profile">
+            <Building2 className="mr-2 h-4 w-4 hidden sm:inline" />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="notifications">
+            <Bell className="mr-2 h-4 w-4 hidden sm:inline" />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="appearance">
+            <Palette className="mr-2 h-4 w-4 hidden sm:inline" />
+            Appearance
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            <Lock className="mr-2 h-4 w-4 hidden sm:inline" />
+            Security
+          </TabsTrigger>
+          <TabsTrigger value="users">
+            <Users className="mr-2 h-4 w-4 hidden sm:inline" />
+            Users
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Sidebar Tabs */}
-        <div className="lg:w-64">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center px-4 py-3 text-left transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <tab.icon className="w-5 h-5 mr-3" />
-                <span className="font-medium">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            {/* Clinic Profile */}
-            {activeTab === 'clinic' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Clinic Profile</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormInput
-                    label="Clinic Name"
-                    placeholder="Enter clinic name"
-                    defaultValue="DentalCare Clinic"
-                  />
-                  <FormInput
-                    label="Phone Number"
-                    placeholder="Enter phone number"
-                    defaultValue="+1 234-567-8900"
-                  />
-                  <FormInput
-                    label="Email"
-                    type="email"
-                    placeholder="Enter email address"
-                    defaultValue="info@dentalcare.com"
-                  />
-                  <FormInput
-                    label="Website"
-                    placeholder="Enter website URL"
-                    defaultValue="https://dentalcare.com"
-                  />
-                </div>
-                <FormInput
-                  label="Address"
-                  placeholder="Enter clinic address"
-                  defaultValue="123 Dental Street, Medical City, MC 12345"
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormInput
-                    label="City"
-                    placeholder="Enter city"
-                    defaultValue="Medical City"
-                  />
-                  <FormInput
-                    label="State/Province"
-                    placeholder="Enter state/province"
-                    defaultValue="MC"
-                  />
-                  <FormInput
-                    label="Postal Code"
-                    placeholder="Enter postal code"
-                    defaultValue="12345"
-                  />
-                  <FormInput
-                    label="Country"
-                    placeholder="Enter country"
-                    defaultValue="United States"
-                  />
-                </div>
-                <div className="flex justify-end pt-4">
-                  <Button onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Notifications */}
-            {activeTab === 'notifications' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Notification Settings</h3>
-                <div className="space-y-4">
-                  {[
-                    { label: 'Email notifications for new appointments', defaultChecked: true },
-                    { label: 'SMS notifications for appointment reminders', defaultChecked: true },
-                    { label: 'Email notifications for new inquiries', defaultChecked: true },
-                    { label: 'Email notifications for billing updates', defaultChecked: false },
-                    { label: 'Push notifications for urgent matters', defaultChecked: true },
-                    { label: 'Weekly summary reports', defaultChecked: false }
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <span className="text-sm text-gray-700">{item.label}</span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          defaultChecked={item.defaultChecked}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-end pt-4">
-                  <Button onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Security */}
-            {activeTab === 'security' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Security Settings</h3>
-                <div className="space-y-4">
-                  <FormInput
-                    label="Current Password"
-                    type="password"
-                    placeholder="Enter current password"
-                  />
-                  <FormInput
-                    label="New Password"
-                    type="password"
-                    placeholder="Enter new password"
-                  />
-                  <FormInput
-                    label="Confirm New Password"
-                    type="password"
-                    placeholder="Confirm new password"
-                  />
-                </div>
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    Password must be at least 8 characters long and include uppercase, lowercase, numbers, and special characters.
-                  </p>
-                </div>
-                <div className="flex justify-end pt-4">
-                  <Button onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Update Password
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Theme */}
-            {activeTab === 'theme' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Theme Settings</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      Color Theme
-                    </label>
-                    <div className="grid grid-cols-3 gap-4">
-                      {[
-                        { name: 'Blue', color: 'bg-blue-500' },
-                        { name: 'Green', color: 'bg-green-500' },
-                        { name: 'Purple', color: 'bg-purple-500' }
-                      ].map((theme) => (
-                        <button
-                          key={theme.name}
-                          className={`p-4 rounded-lg border-2 ${
-                            theme.name === 'Blue' ? 'border-blue-500' : 'border-gray-200'
-                          } hover:border-gray-300 transition-colors`}
-                        >
-                          <div className={`w-8 h-8 ${theme.color} rounded-full mx-auto mb-2`}></div>
-                          <span className="text-sm text-gray-700">{theme.name}</span>
-                        </button>
-                      ))}
-                    </div>
+        {/* Profile Tab */}
+        <TabsContent value="profile">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Clinic Profile</CardTitle>
+                <CardDescription>Update your clinic information and contact details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="clinic-name">Clinic Name</Label>
+                    <Input id="clinic-name" defaultValue="DentaCare Dental Clinic" />
                   </div>
-                  <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">
-                      Display Mode
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <button className="p-4 rounded-lg border-2 border-blue-500 bg-blue-50">
-                        <span className="text-sm text-gray-700">Light Mode</span>
-                      </button>
-                      <button className="p-4 rounded-lg border-2 border-gray-200 hover:border-gray-300">
-                        <span className="text-sm text-gray-700">Dark Mode</span>
-                      </button>
-                    </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="clinic-email">Email</Label>
+                    <Input id="clinic-email" type="email" defaultValue="info@dentacare.com" />
                   </div>
                 </div>
-                <div className="flex justify-end pt-4">
-                  <Button onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </Button>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="clinic-phone">Phone</Label>
+                    <Input id="clinic-phone" defaultValue="+1 (555) 100-2000" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="clinic-website">Website</Label>
+                    <Input id="clinic-website" defaultValue="www.dentacare.com" />
+                  </div>
                 </div>
-              </div>
-            )}
+                <div className="grid gap-2">
+                  <Label htmlFor="clinic-address">Address</Label>
+                  <Textarea id="clinic-address" defaultValue="123 Healthcare Avenue, Medical District, NY 10001" />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="opening-hours">Opening Hours</Label>
+                    <Input id="opening-hours" defaultValue="Mon-Fri: 8:00 AM - 6:00 PM" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <Select defaultValue="est">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="est">Eastern Time (EST)</SelectItem>
+                        <SelectItem value="cst">Central Time (CST)</SelectItem>
+                        <SelectItem value="mst">Mountain Time (MST)</SelectItem>
+                        <SelectItem value="pst">Pacific Time (PST)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
 
-            {/* User Management */}
-            {activeTab === 'users' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
-                  <Button size="sm">
-                    <Users className="w-4 h-4 mr-2" />
-                    Add User
-                  </Button>
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Settings</CardTitle>
+                <CardDescription>Configure how and when you receive notifications</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {[
+                  { label: "Email Notifications", description: "Receive email notifications for new appointments", defaultChecked: true },
+                  { label: "SMS Notifications", description: "Send SMS reminders to patients", defaultChecked: true },
+                  { label: "Appointment Reminders", description: "Send reminders 24 hours before appointments", defaultChecked: true },
+                  { label: "Payment Alerts", description: "Get notified for overdue payments", defaultChecked: false },
+                  { label: "New Inquiry Alerts", description: "Notify when new patient inquiries arrive", defaultChecked: true },
+                  { label: "Staff Attendance Alerts", description: "Alert for late or absent staff", defaultChecked: false },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between rounded-lg border border-border p-4">
+                    <div>
+                      <p className="font-medium text-foreground">{item.label}</p>
+                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                    </div>
+                    <Switch defaultChecked={item.defaultChecked} />
+                  </div>
+                ))}
+                <Button>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Preferences
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        {/* Appearance Tab */}
+        <TabsContent value="appearance">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Theme Settings</CardTitle>
+                <CardDescription>Customize the appearance of the dashboard</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between rounded-lg border border-border p-4">
+                  <div>
+                    <p className="font-medium text-foreground">Dark Mode</p>
+                    <p className="text-sm text-muted-foreground">Toggle between light and dark theme</p>
+                  </div>
+                  <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
                 </div>
+                <div className="grid gap-2">
+                  <Label>Primary Color</Label>
+                  <div className="flex gap-3">
+                    {["#2563eb", "#10b981", "#8b5cf6", "#f59e0b", "#ef4444", "#ec4899"].map((color) => (
+                      <button
+                        key={color}
+                        className="h-8 w-8 rounded-full border-2 border-transparent hover:border-foreground/50 transition-colors"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Font Size</Label>
+                  <Select defaultValue="medium">
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle>Change Password</CardTitle>
+                <CardDescription>Update your account password</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="current-password">Current Password</Label>
+                  <Input id="current-password" type="password" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <Input id="new-password" type="password" />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <Input id="confirm-password" type="password" />
+                </div>
+                <Button>
+                  <Lock className="mr-2 h-4 w-4" />
+                  Update Password
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Manage staff accounts and permissions</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-4">
                   {[
-                    { name: 'Admin User', email: 'admin@dentalcare.com', role: 'Administrator', status: 'Active' },
-                    { name: 'Dr. Sarah Johnson', email: 'sarah.johnson@dentalcare.com', role: 'Doctor', status: 'Active' },
-                    { name: 'Receptionist Mary', email: 'mary@dentalcare.com', role: 'Receptionist', status: 'Active' },
-                    { name: 'Nurse Amanda', email: 'amanda@dentalcare.com', role: 'Nurse', status: 'Active' }
-                  ].map((user, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                        <p className="text-xs text-gray-400">{user.role}</p>
+                    { name: "Admin User", email: "admin@dentacare.com", role: "Admin" },
+                    { name: "Dr. Michael Chen", email: "michael.chen@dentacare.com", role: "Doctor" },
+                    { name: "Jessica Adams", email: "jessica.a@dentacare.com", role: "Nurse" },
+                    { name: "Reception Staff", email: "reception@dentacare.com", role: "Staff" },
+                  ].map((user) => (
+                    <div key={user.email} className="flex items-center justify-between rounded-lg border border-border p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                          <span className="text-sm font-semibold text-primary">
+                            {user.name.split(" ").map(n => n[0]).join("")}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{user.name}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                          {user.status}
-                        </span>
-                        <Button variant="ghost" size="sm">
-                          Edit
-                        </Button>
+                        <span className="text-sm text-muted-foreground">{user.role}</span>
+                        <Button variant="outline" size="sm">Edit</Button>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-};
-
-export default Settings;
+}

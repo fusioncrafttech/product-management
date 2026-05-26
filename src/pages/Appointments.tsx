@@ -1,257 +1,263 @@
-import React, { useState } from 'react';
-import { Search, Plus, Filter, Calendar, Clock, User, Phone } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import Button from '../components/Button';
-import StatusBadge from '../components/StatusBadge';
-import Modal from '../components/Modal';
-import FormInput from '../components/FormInput';
-import FormSelect from '../components/FormSelect';
-import { appointments } from '../data/appointments';
-import { doctors } from '../data/doctors';
-import { services } from '../data/services';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Plus, Calendar, Clock, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { PageHeader } from "@/components/common/PageHeader";
+import { SearchBar } from "@/components/common/SearchBar";
+import { FilterDropdown } from "@/components/common/FilterDropdown";
+import { EmptyState } from "@/components/common/EmptyState";
+import { appointments } from "@/data/appointments";
+import { doctors } from "@/data/doctors";
 
-const Appointments: React.FC = () => {
+const statusOptions = [
+  { label: "All Status", value: "all" },
+  { label: "Pending", value: "pending" },
+  { label: "Confirmed", value: "confirmed" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
+];
+
+export default function Appointments() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedAppointment, setSelectedAppointment] = useState<typeof appointments[0] | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 7;
 
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = 
-      appointment.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.doctor.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
+  const filteredAppointments = appointments.filter((apt) => {
+    const matchesSearch =
+      apt.patientName.toLowerCase().includes(search.toLowerCase()) ||
+      apt.doctor.toLowerCase().includes(search.toLowerCase()) ||
+      apt.service.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || apt.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleAddAppointment = () => {
-    setSelectedAppointment(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditAppointment = (appointment: typeof appointments[0]) => {
-    setSelectedAppointment(appointment);
-    setIsModalOpen(true);
-  };
-
-  const doctorOptions = doctors.map(doc => ({ value: doc.name, label: doc.name }));
-  const serviceOptions = services.map(svc => ({ value: svc.name, label: svc.name }));
+  const totalPages = Math.ceil(filteredAppointments.length / itemsPerPage);
+  const paginatedAppointments = filteredAppointments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div>
-      <PageHeader
-        title="Appointments"
-        subtitle="Manage patient appointments and schedules"
-        actions={
-          <Button onClick={handleAddAppointment}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Appointment
-          </Button>
-        }
-      />
+    <div className="space-y-6">
+      <PageHeader title="Appointments" description="Manage patient appointments and schedules">
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Appointment
+        </Button>
+      </PageHeader>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search appointments..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Confirmed">Confirmed</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Appointments Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Patient
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Doctor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Date & Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Service
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAppointments.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                    <div className="flex flex-col items-center">
-                      <Calendar className="w-12 h-12 text-gray-300 mb-4" />
-                      <p className="text-lg font-medium">No appointments found</p>
-                      <p className="text-sm">Try adjusting your search or filters</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredAppointments.map((appointment) => (
-                  <tr key={appointment.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div className="ml-4">
-                          <p className="text-sm font-medium text-gray-900">{appointment.patientName}</p>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Phone className="w-3 h-3 mr-1" />
-                            {appointment.patientPhone}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {appointment.doctor}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-                        {appointment.date}
-                      </div>
-                      <div className="flex items-center text-gray-500">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {appointment.time}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {appointment.service}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge
-                        status={appointment.status}
-                        variant={
-                          appointment.status === 'Confirmed'
-                            ? 'success'
-                            : appointment.status === 'Pending'
-                            ? 'warning'
-                            : appointment.status === 'Completed'
-                            ? 'info'
-                            : 'danger'
-                        }
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditAppointment(appointment)}
-                      >
-                        Edit
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Add/Edit Appointment Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={selectedAppointment ? 'Edit Appointment' : 'New Appointment'}
-        size="lg"
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col gap-3 sm:flex-row sm:items-center"
       >
-        <form className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="Patient Name"
-              placeholder="Enter patient name"
-              defaultValue={selectedAppointment?.patientName}
-            />
-            <FormInput
-              label="Patient Phone"
-              placeholder="Enter phone number"
-              defaultValue={selectedAppointment?.patientPhone}
-            />
+        <SearchBar
+          placeholder="Search appointments..."
+          value={search}
+          onChange={setSearch}
+          className="sm:w-72"
+        />
+        <FilterDropdown
+          placeholder="Filter by status"
+          options={statusOptions}
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
+      </motion.div>
+
+      {/* Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Appointments ({filteredAppointments.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {paginatedAppointments.length === 0 ? (
+              <EmptyState
+                title="No appointments found"
+                description="Try adjusting your search or filter to find what you're looking for."
+                action={
+                  <Button onClick={() => setIsModalOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Appointment
+                  </Button>
+                }
+              />
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead className="hidden md:table-cell">Doctor</TableHead>
+                      <TableHead className="hidden lg:table-cell">Service</TableHead>
+                      <TableHead className="hidden sm:table-cell">Date & Time</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedAppointments.map((apt) => (
+                      <TableRow key={apt.id}>
+                        <TableCell className="font-mono text-xs">{apt.id}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{apt.patientName}</p>
+                            <p className="text-xs text-muted-foreground">{apt.patientPhone}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{apt.doctor}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{apt.service}</TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <div className="flex items-center gap-1 text-sm">
+                            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                            {apt.date}
+                            <Clock className="ml-2 h-3.5 w-3.5 text-muted-foreground" />
+                            {apt.time}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={apt.status}>{apt.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                      {Math.min(currentPage * itemsPerPage, filteredAppointments.length)} of{" "}
+                      {filteredAppointments.length}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((p) => p - 1)}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <Button
+                          key={i + 1}
+                          variant={currentPage === i + 1 ? "default" : "outline"}
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setCurrentPage(i + 1)}
+                        >
+                          {i + 1}
+                        </Button>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Add/Edit Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>Add New Appointment</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="patient">Patient Name</Label>
+              <Input id="patient" placeholder="Enter patient name" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="patient@email.com" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input id="phone" placeholder="+1 (555) 000-0000" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="doctor">Doctor</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a doctor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {doctors.map((doc) => (
+                    <SelectItem key={doc.id} value={doc.id}>
+                      {doc.name} - {doc.specialization}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="date">Date</Label>
+                <Input id="date" type="date" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="time">Time</Label>
+                <Input id="time" type="time" />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea id="notes" placeholder="Additional notes..." />
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormSelect
-              label="Doctor"
-              options={doctorOptions}
-              defaultValue={selectedAppointment?.doctor}
-            />
-            <FormSelect
-              label="Service"
-              options={serviceOptions}
-              defaultValue={selectedAppointment?.service}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="Date"
-              type="date"
-              defaultValue={selectedAppointment?.date}
-            />
-            <FormInput
-              label="Time"
-              type="time"
-              defaultValue={selectedAppointment?.time}
-            />
-          </div>
-          <FormSelect
-            label="Status"
-            options={[
-              { value: 'Pending', label: 'Pending' },
-              { value: 'Confirmed', label: 'Confirmed' },
-              { value: 'Completed', label: 'Completed' },
-              { value: 'Cancelled', label: 'Cancelled' }
-            ]}
-            defaultValue={selectedAppointment?.status}
-          />
-          <FormInput
-            label="Notes"
-            placeholder="Add any notes..."
-            defaultValue={selectedAppointment?.notes}
-          />
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit">
-              {selectedAppointment ? 'Update' : 'Create'} Appointment
-            </Button>
-          </div>
-        </form>
-      </Modal>
+            <Button onClick={() => setIsModalOpen(false)}>Save Appointment</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default Appointments;
+}

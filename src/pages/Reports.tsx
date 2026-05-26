@@ -1,236 +1,186 @@
-import React, { useState } from 'react';
-import { Download, Calendar, TrendingUp, Users, DollarSign, BarChart3 } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import Button from '../components/Button';
-import FormSelect from '../components/FormSelect';
-import { doctors } from '../data/doctors';
-import { appointments } from '../data/appointments';
-import { invoices } from '../data/invoices';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Download, TrendingUp, Users, Calendar, DollarSign } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, PieChart, Pie, Cell,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageHeader } from "@/components/common/PageHeader";
+import { StatsCard } from "@/components/common/StatsCard";
+import { reportsData } from "@/data/reports";
 
-const Reports: React.FC = () => {
-  const [selectedMonth, setSelectedMonth] = useState('January 2024');
-  const [selectedReport, setSelectedReport] = useState('revenue');
+const COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
-  const monthOptions = [
-    { value: 'January 2024', label: 'January 2024' },
-    { value: 'December 2023', label: 'December 2023' },
-    { value: 'November 2023', label: 'November 2023' },
-    { value: 'October 2023', label: 'October 2023' }
-  ];
-
-  const reportOptions = [
-    { value: 'revenue', label: 'Revenue Report' },
-    { value: 'appointments', label: 'Appointment Analytics' },
-    { value: 'doctors', label: 'Doctor Performance' }
-  ];
-
-  const doctorPerformance = doctors.map(doctor => ({
-    name: doctor.name,
-    patients: doctor.patients,
-    rating: doctor.rating,
-    revenue: Math.floor(Math.random() * 50000) + 20000
-  }));
-
-  const appointmentStats = [
-    { label: 'Total Appointments', value: appointments.length, icon: Calendar, color: 'bg-blue-500' },
-    { label: 'Completed', value: appointments.filter(a => a.status === 'Completed').length, icon: TrendingUp, color: 'bg-green-500' },
-    { label: 'Pending', value: appointments.filter(a => a.status === 'Pending').length, icon: Users, color: 'bg-yellow-500' },
-    { label: 'Cancelled', value: appointments.filter(a => a.status === 'Cancelled').length, icon: BarChart3, color: 'bg-red-500' }
-  ];
-
-  const totalRevenue = invoices
-    .filter(inv => inv.status === 'Paid')
-    .reduce((sum, inv) => sum + inv.amount, 0);
-
-  const handleExport = () => {
-    console.log('Exporting report...');
-  };
+export default function Reports() {
+  const [period, setPeriod] = useState("6months");
 
   return (
-    <div>
-      <PageHeader
-        title="Reports"
-        subtitle="View clinic analytics and performance reports"
-        actions={
-          <Button onClick={handleExport}>
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
+    <div className="space-y-6">
+      <PageHeader title="Reports" description="View clinic performance analytics and reports">
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1month">Last Month</SelectItem>
+              <SelectItem value="3months">Last 3 Months</SelectItem>
+              <SelectItem value="6months">Last 6 Months</SelectItem>
+              <SelectItem value="1year">Last Year</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            Export
           </Button>
-        }
-      />
-
-      {/* Filters */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <FormSelect
-              label="Report Type"
-              options={reportOptions}
-              value={selectedReport}
-              onChange={(e) => setSelectedReport(e.target.value)}
-            />
-          </div>
-          <div className="flex-1">
-            <FormSelect
-              label="Month"
-              options={monthOptions}
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            />
-          </div>
         </div>
+      </PageHeader>
+
+      {/* Summary Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatsCard title="Total Revenue" value="$215,500" icon={DollarSign} trend="+12% vs last period" trendUp={true} />
+        <StatsCard title="Total Appointments" value="788" icon={Calendar} trend="+8% vs last period" trendUp={true} iconColor="text-blue-500" />
+        <StatsCard title="New Patients" value="156" icon={Users} trend="+15% vs last period" trendUp={true} iconColor="text-purple-500" />
+        <StatsCard title="Avg. Rating" value="4.8" icon={TrendingUp} trend="+0.2 vs last period" trendUp={true} iconColor="text-success" />
       </div>
 
-      {/* Revenue Report */}
-      {selectedReport === 'revenue' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-lg bg-green-500">
-                  <DollarSign className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-sm font-medium text-green-600">+18%</span>
-              </div>
-              <h3 className="mt-4 text-2xl font-bold text-gray-900">${totalRevenue.toLocaleString()}</h3>
-              <p className="mt-1 text-sm text-gray-600">Total Revenue</p>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-lg bg-blue-500">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-sm font-medium text-blue-600">+12%</span>
-              </div>
-              <h3 className="mt-4 text-2xl font-bold text-gray-900">{invoices.length}</h3>
-              <p className="mt-1 text-sm text-gray-600">Total Invoices</p>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-lg bg-purple-500">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-sm font-medium text-purple-600">+8%</span>
-              </div>
-              <h3 className="mt-4 text-2xl font-bold text-gray-900">{invoices.length * 15}</h3>
-              <p className="mt-1 text-sm text-gray-600">Unique Patients</p>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="p-3 rounded-lg bg-orange-500">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-sm font-medium text-orange-600">+5%</span>
-              </div>
-              <h3 className="mt-4 text-2xl font-bold text-gray-900">$450</h3>
-              <p className="mt-1 text-sm text-gray-600">Avg. Revenue/Patient</p>
-            </div>
-          </div>
+      {/* Charts Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Revenue Analytics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={reportsData.monthlyRevenue}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "8px",
+                    }}
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                  />
+                  <Line type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={2} dot={{ fill: "#2563eb", r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-          {/* Revenue Chart Placeholder */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Trend</h3>
-            <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <BarChart3 className="w-12 h-12 mx-auto mb-2" />
-                <p>Revenue Chart Placeholder</p>
-                <p className="text-sm">Chart visualization would be rendered here</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Appointment Statistics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={reportsData.appointmentStats}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="month" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Bar dataKey="completed" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="cancelled" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
-      {/* Appointment Analytics */}
-      {selectedReport === 'appointments' && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {appointmentStats.map((stat, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <div className={`p-3 rounded-lg ${stat.color} w-fit`}>
-                  <stat.icon className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="mt-4 text-2xl font-bold text-gray-900">{stat.value}</h3>
-                <p className="mt-1 text-sm text-gray-600">{stat.label}</p>
+      {/* Service Breakdown & Doctor Performance */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Service Revenue Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={reportsData.serviceBreakdown}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="revenue"
+                    nameKey="service"
+                  >
+                    {reportsData.serviceBreakdown.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "8px",
+                    }}
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {reportsData.serviceBreakdown.map((item, index) => (
+                  <div key={item.service} className="flex items-center gap-2 text-xs">
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                    <span className="truncate text-muted-foreground">{item.service}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-          {/* Appointment Chart Placeholder */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Appointment Trends</h3>
-            <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <Calendar className="w-12 h-12 mx-auto mb-2" />
-                <p>Appointment Analytics Chart Placeholder</p>
-                <p className="text-sm">Chart visualization would be rendered here</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Doctor Performance */}
-      {selectedReport === 'doctors' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Doctor Performance</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Doctor
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Patients
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Rating
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Revenue
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Performance
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {doctorPerformance.map((doctor, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {doctor.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {doctor.patients}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {doctor.rating} ⭐
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        ${doctor.revenue.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${Math.random() * 40 + 60}%` }}
-                          ></div>
-                        </div>
-                      </td>
-                    </tr>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Doctor Performance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Doctor</TableHead>
+                    <TableHead>Patients</TableHead>
+                    <TableHead>Revenue</TableHead>
+                    <TableHead>Rating</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reportsData.doctorPerformance.map((doc) => (
+                    <TableRow key={doc.name}>
+                      <TableCell className="font-medium">{doc.name}</TableCell>
+                      <TableCell>{doc.patients}</TableCell>
+                      <TableCell>${doc.revenue.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <span className="text-yellow-500">★</span> {doc.rating}
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
-};
-
-export default Reports;
+}

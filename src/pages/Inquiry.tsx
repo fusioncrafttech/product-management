@@ -1,210 +1,205 @@
-import React, { useState } from 'react';
-import { Search, Mail, Phone, MessageSquare, Send, Calendar } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import Button from '../components/Button';
-import StatusBadge from '../components/StatusBadge';
-import Modal from '../components/Modal';
-import FormSelect from '../components/FormSelect';
-import { inquiries } from '../data/inquiries';
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { MessageSquare, Eye, Reply, AlertTriangle, Clock, CheckCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/common/PageHeader";
+import { SearchBar } from "@/components/common/SearchBar";
+import { FilterDropdown } from "@/components/common/FilterDropdown";
+import { StatsCard } from "@/components/common/StatsCard";
+import { inquiries, type Inquiry } from "@/data/inquiries";
 
-const Inquiry: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedInquiry, setSelectedInquiry] = useState<typeof inquiries[0] | null>(null);
+const statusOptions = [
+  { label: "All Status", value: "all" },
+  { label: "New", value: "new" },
+  { label: "Replied", value: "replied" },
+  { label: "Closed", value: "closed" },
+];
 
-  const filteredInquiries = inquiries.filter(inquiry => {
-    const matchesSearch = 
-      inquiry.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inquiry.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inquiry.subject.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || inquiry.status === statusFilter;
-    return matchesSearch && matchesStatus;
+const priorityOptions = [
+  { label: "All Priority", value: "all" },
+  { label: "High", value: "high" },
+  { label: "Medium", value: "medium" },
+  { label: "Low", value: "low" },
+];
+
+function getStatusVariant(status: string) {
+  switch (status) {
+    case "new": return "confirmed" as const;
+    case "replied": return "completed" as const;
+    case "closed": return "secondary" as const;
+    default: return "secondary" as const;
+  }
+}
+
+function getPriorityVariant(priority: string) {
+  switch (priority) {
+    case "high": return "cancelled" as const;
+    case "medium": return "warning" as const;
+    case "low": return "secondary" as const;
+    default: return "secondary" as const;
+  }
+}
+
+export default function Inquiry() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const filteredInquiries = inquiries.filter((inq) => {
+    const matchesSearch =
+      inq.patientName.toLowerCase().includes(search.toLowerCase()) ||
+      inq.subject.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || inq.status === statusFilter;
+    const matchesPriority = priorityFilter === "all" || inq.priority === priorityFilter;
+    return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const handleReply = (inquiry: typeof inquiries[0]) => {
-    setSelectedInquiry(inquiry);
-    setIsModalOpen(true);
-  };
+  const newCount = inquiries.filter((i) => i.status === "new").length;
+  const highPriorityCount = inquiries.filter((i) => i.priority === "high").length;
 
   return (
-    <div>
-      <PageHeader
-        title="Inquiry"
-        subtitle="Manage patient inquiries and messages"
-      />
+    <div className="space-y-6">
+      <PageHeader title="Inquiries" description="Manage patient inquiries and messages" />
+
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatsCard title="Total Inquiries" value={inquiries.length} icon={MessageSquare} />
+        <StatsCard title="New Inquiries" value={newCount} icon={Clock} iconColor="text-blue-500" />
+        <StatsCard title="High Priority" value={highPriorityCount} icon={AlertTriangle} iconColor="text-destructive" />
+      </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search inquiries..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="New">New</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-            </select>
-          </div>
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchBar
+          placeholder="Search inquiries..."
+          value={search}
+          onChange={setSearch}
+          className="sm:w-72"
+        />
+        <FilterDropdown
+          placeholder="Status"
+          options={statusOptions}
+          value={statusFilter}
+          onChange={setStatusFilter}
+        />
+        <FilterDropdown
+          placeholder="Priority"
+          options={priorityOptions}
+          value={priorityFilter}
+          onChange={setPriorityFilter}
+        />
       </div>
 
-      {/* Inquiries Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Subject
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Message
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredInquiries.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                    <div className="flex flex-col items-center">
-                      <MessageSquare className="w-12 h-12 text-gray-300 mb-4" />
-                      <p className="text-lg font-medium">No inquiries found</p>
-                      <p className="text-sm">Try adjusting your search or filters</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredInquiries.map((inquiry) => (
-                  <tr key={inquiry.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{inquiry.name}</p>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Mail className="w-3 h-3 mr-1" />
-                          {inquiry.email}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Phone className="w-3 h-3 mr-1" />
-                          {inquiry.phone}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {inquiry.subject}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate">
-                      {inquiry.message}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-                        {inquiry.date}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge
-                        status={inquiry.status}
-                        variant={
-                          inquiry.status === 'New'
-                            ? 'danger'
-                            : inquiry.status === 'In Progress'
-                            ? 'warning'
-                            : 'success'
-                        }
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleReply(inquiry)}
-                      >
-                        <Send className="w-4 h-4 mr-1" />
-                        Reply
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Reply Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Reply to Inquiry"
-        size="lg"
+      {/* Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
       >
-        {selectedInquiry && (
-          <form className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm font-medium text-gray-900 mb-1">From: {selectedInquiry.name}</p>
-              <p className="text-sm text-gray-600 mb-1">Email: {selectedInquiry.email}</p>
-              <p className="text-sm text-gray-600 mb-2">Subject: {selectedInquiry.subject}</p>
-              <p className="text-sm text-gray-700 italic">"{selectedInquiry.message}"</p>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Inquiries ({filteredInquiries.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Patient</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInquiries.map((inquiry) => (
+                  <TableRow key={inquiry.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{inquiry.patientName}</p>
+                        <p className="text-xs text-muted-foreground">{inquiry.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">{inquiry.subject}</TableCell>
+                    <TableCell className="hidden md:table-cell">{inquiry.date}</TableCell>
+                    <TableCell>
+                      <Badge variant={getPriorityVariant(inquiry.priority)}>{inquiry.priority}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(inquiry.status)}>{inquiry.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedInquiry(inquiry);
+                            setIsDetailOpen(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <Reply className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Inquiry Detail Modal */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>{selectedInquiry?.subject}</DialogTitle>
+            <DialogDescription>
+              From {selectedInquiry?.patientName} • {selectedInquiry?.date}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInquiry && (
+            <div className="space-y-4 py-4">
+              <div className="flex gap-2">
+                <Badge variant={getPriorityVariant(selectedInquiry.priority)}>
+                  {selectedInquiry.priority} priority
+                </Badge>
+                <Badge variant={getStatusVariant(selectedInquiry.status)}>
+                  {selectedInquiry.status}
+                </Badge>
+              </div>
+              <div className="rounded-lg bg-muted p-4">
+                <p className="text-sm">{selectedInquiry.message}</p>
+              </div>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>Email: {selectedInquiry.email}</p>
+                <p>Phone: {selectedInquiry.phone}</p>
+              </div>
+              <div className="grid gap-2">
+                <Label>Reply</Label>
+                <Textarea placeholder="Type your reply here..." />
+              </div>
             </div>
-            <FormSelect
-              label="Status"
-              options={[
-                { value: 'New', label: 'New' },
-                { value: 'In Progress', label: 'In Progress' },
-                { value: 'Resolved', label: 'Resolved' }
-              ]}
-              defaultValue={selectedInquiry.status}
-            />
-            <div className="w-full">
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Reply
-              </label>
-              <textarea
-                placeholder="Type your reply..."
-                rows={5}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                <Send className="w-4 h-4 mr-2" />
-                Send Reply
-              </Button>
-            </div>
-          </form>
-        )}
-      </Modal>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDetailOpen(false)}>Close</Button>
+            <Button onClick={() => setIsDetailOpen(false)}>Send Reply</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default Inquiry;
+}
