@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import toast from "react-hot-toast";
-import { Plus, Edit, Clock, DollarSign, Tag } from "lucide-react";
+import { Plus, Edit, Clock, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

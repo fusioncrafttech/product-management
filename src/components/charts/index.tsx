@@ -77,7 +77,7 @@ export function RevenueChart({
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                formatter={(value) => [`$${Number(value).toLocaleString()}`, "Revenue"]}
               />
               <Area
                 type="monotone"
@@ -295,9 +295,9 @@ export function MonthlyAnalyticsChart({
               </Pie>
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(value: number, name: string) => [
-                  `${value.toLocaleString()} (${((value / total) * 100).toFixed(1)}%)`,
-                  name,
+                formatter={(value, name) => [
+                  `${Number(value).toLocaleString()} (${((Number(value) / total) * 100).toFixed(1)}%)`,
+                  name as string,
                 ]}
               />
             </PieChart>

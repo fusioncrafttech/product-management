@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { User, Mail, Phone, Calendar, CreditCard, FileText } from "lucide-react";
+import { Mail, Phone, Calendar, CreditCard, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
