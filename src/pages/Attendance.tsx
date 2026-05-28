@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Clock, UserCheck, UserX, AlertCircle, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,12 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { SearchBar } from "@/components/common/SearchBar";
 import { FilterDropdown } from "@/components/common/FilterDropdown";
 import { StatsCard } from "@/components/common/StatsCard";
+import { EmptyState } from "@/components/common/EmptyState";
+import { Pagination } from "@/components/common/Pagination";
+import { SortableHeader } from "@/components/common/SortableHeader";
+import { AnimatedSection } from "@/components/common/AnimatedSection";
+import { useTableState } from "@/hooks/useTableState";
+import { getStatusVariant } from "@/lib/variants";
 import { attendance, attendanceSummary } from "@/data/attendance";
 
 const statusOptions = [
@@ -19,16 +24,6 @@ const statusOptions = [
   { label: "Late", value: "late" },
   { label: "Half Day", value: "half-day" },
 ];
-
-function getAttendanceVariant(status: string) {
-  switch (status) {
-    case "present": return "completed" as const;
-    case "absent": return "cancelled" as const;
-    case "late": return "warning" as const;
-    case "half-day": return "confirmed" as const;
-    default: return "secondary" as const;
-  }
-}
 
 export default function Attendance() {
   const [search, setSearch] = useState("");
@@ -41,6 +36,36 @@ export default function Attendance() {
     const matchesDate = !dateFilter || record.date === dateFilter;
     return matchesSearch && matchesStatus && matchesDate;
   });
+
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData,
+    sortConfig,
+    handleSort,
+    resetPage,
+    itemsPerPage,
+    totalItems,
+  } = useTableState({
+    data: filteredAttendance as unknown as Record<string, unknown>[],
+    itemsPerPage: 7,
+  });
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    resetPage();
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    resetPage();
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDateFilter(e.target.value);
+    resetPage();
+  };
 
   return (
     <div className="space-y-6">
@@ -56,37 +81,35 @@ export default function Attendance() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <SearchBar
-          placeholder="Search nurses..."
-          value={search}
-          onChange={setSearch}
-          className="sm:w-72"
-        />
-        <FilterDropdown
-          placeholder="Filter by status"
-          options={statusOptions}
-          value={statusFilter}
-          onChange={setStatusFilter}
-        />
-        <Input
-          type="date"
-          value={dateFilter}
-          onChange={(e) => setDateFilter(e.target.value)}
-          className="w-[180px]"
-        />
-      </div>
+      <AnimatedSection>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <SearchBar
+            placeholder="Search nurses..."
+            value={search}
+            onChange={handleSearchChange}
+            className="sm:w-72"
+          />
+          <FilterDropdown
+            placeholder="Filter by status"
+            options={statusOptions}
+            value={statusFilter}
+            onChange={handleStatusChange}
+          />
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={handleDateChange}
+            className="w-[180px]"
+          />
+        </div>
+      </AnimatedSection>
 
       {/* Attendance Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
+      <AnimatedSection delay={0.1}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-base">
-              Attendance Records ({filteredAttendance.length})
+              Attendance Records ({totalItems})
             </CardTitle>
             <Button variant="outline" size="sm">
               <Clock className="mr-2 h-4 w-4" />
@@ -94,44 +117,90 @@ export default function Attendance() {
             </Button>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nurse</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="hidden sm:table-cell">Check In</TableHead>
-                  <TableHead className="hidden sm:table-cell">Check Out</TableHead>
-                  <TableHead className="hidden md:table-cell">Hours</TableHead>
-                  <TableHead className="hidden lg:table-cell">Department</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAttendance.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell className="font-medium">{record.nurseName}</TableCell>
-                    <TableCell>{record.date}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{record.checkIn}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{record.checkOut}</TableCell>
-                    <TableCell className="hidden md:table-cell">{record.hoursWorked}h</TableCell>
-                    <TableCell className="hidden lg:table-cell">{record.department}</TableCell>
-                    <TableCell>
-                      <Badge variant={getAttendanceVariant(record.status)}>{record.status}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {totalItems === 0 ? (
+              <EmptyState
+                title="No attendance records found"
+                description="Try adjusting your search or filters to find records."
+              />
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>
+                          <SortableHeader label="Nurse" sortKey="nurseName" currentSort={sortConfig} onSort={handleSort} />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader label="Date" sortKey="date" currentSort={sortConfig} onSort={handleSort} />
+                        </TableHead>
+                        <TableHead className="hidden md:table-cell">Check In</TableHead>
+                        <TableHead className="hidden md:table-cell">Check Out</TableHead>
+                        <TableHead className="hidden lg:table-cell">
+                          <SortableHeader label="Hours" sortKey="hoursWorked" currentSort={sortConfig} onSort={handleSort} />
+                        </TableHead>
+                        <TableHead className="hidden lg:table-cell">
+                          <SortableHeader label="Department" sortKey="department" currentSort={sortConfig} onSort={handleSort} />
+                        </TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(paginatedData as unknown as typeof attendance).map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell className="font-medium">{record.nurseName}</TableCell>
+                          <TableCell>{record.date}</TableCell>
+                          <TableCell className="hidden md:table-cell">{record.checkIn}</TableCell>
+                          <TableCell className="hidden md:table-cell">{record.checkOut}</TableCell>
+                          <TableCell className="hidden lg:table-cell">{record.hoursWorked}h</TableCell>
+                          <TableCell className="hidden lg:table-cell">{record.department}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant("attendance", record.status)}>{record.status}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="sm:hidden space-y-3">
+                  {(paginatedData as unknown as typeof attendance).map((record) => (
+                    <div key={record.id} className="rounded-lg border border-border p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-foreground">{record.nurseName}</p>
+                        <Badge variant={getStatusVariant("attendance", record.status)}>{record.status}</Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                        <span>Date: {record.date}</span>
+                        <span>Dept: {record.department}</span>
+                        <span>In: {record.checkIn}</span>
+                        <span>Out: {record.checkOut}</span>
+                      </div>
+                      <div className="text-sm">
+                        <span className="font-medium">{record.hoursWorked}h</span>
+                        <span className="text-muted-foreground"> worked</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )}
           </CardContent>
         </Card>
-      </motion.div>
+      </AnimatedSection>
 
       {/* Monthly Summary */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <AnimatedSection delay={0.2}>
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Monthly Attendance Summary</CardTitle>
@@ -157,7 +226,7 @@ export default function Attendance() {
             </div>
           </CardContent>
         </Card>
-      </motion.div>
+      </AnimatedSection>
     </div>
   );
 }

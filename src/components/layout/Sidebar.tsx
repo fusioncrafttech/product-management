@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,15 +17,15 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Dashboard", path: "/", icon: LayoutDashboard },
-  { label: "Appointments", path: "/appointments", icon: Calendar },
-  { label: "Billing", path: "/billing", icon: Receipt },
-  { label: "Doctors", path: "/doctors", icon: Stethoscope },
-  { label: "Services", path: "/services", icon: Wrench },
-  { label: "Inquiry", path: "/inquiry", icon: MessageSquare },
-  { label: "Reports", path: "/reports", icon: BarChart3 },
-  { label: "Nurse Attendance", path: "/attendance", icon: ClipboardCheck },
-  { label: "Settings", path: "/settings", icon: Settings },
+  { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  { label: "Appointments", path: "/admin/appointments", icon: Calendar },
+  { label: "Billing", path: "/admin/billing", icon: Receipt },
+  { label: "Doctors", path: "/admin/doctors", icon: Stethoscope },
+  { label: "Services", path: "/admin/services", icon: Wrench },
+  { label: "Inquiry", path: "/admin/inquiry", icon: MessageSquare },
+  { label: "Reports", path: "/admin/reports", icon: BarChart3 },
+  { label: "Nurse Attendance", path: "/admin/attendance", icon: ClipboardCheck },
+  { label: "Settings", path: "/admin/settings", icon: Settings },
 ];
 
 interface SidebarProps {
@@ -33,6 +34,20 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const touchStartX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    // Swipe left to close
+    if (diff > 80) onClose();
+    touchStartX.current = null;
+  };
+
   return (
     <>
       {/* Mobile overlay */}
@@ -43,15 +58,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px] lg:hidden"
           />
         )}
       </AnimatePresence>
 
       {/* Sidebar */}
       <aside
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 border-r border-sidebar-border bg-sidebar transition-transform duration-300 lg:static lg:translate-x-0",
+          "fixed top-0 left-0 z-50 h-full w-[280px] border-r border-sidebar-border bg-sidebar transition-transform duration-300 ease-in-out lg:static lg:w-64 lg:translate-x-0",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -65,22 +82,25 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 hover:bg-accent lg:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-accent active:bg-accent/80 lg:hidden"
+            aria-label="Close sidebar"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-1 p-4">
+        <nav className="flex flex-col gap-1 overflow-y-auto p-3 pb-24 scrollbar-thin">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
+              end={item.path === "/admin"}
               onClick={onClose}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200 active:scale-[0.97]",
+                  "min-h-[44px]", // Touch-friendly minimum height
                   isActive
                     ? "bg-primary/10 text-primary shadow-sm"
                     : "text-sidebar-foreground hover:bg-accent hover:text-foreground"
@@ -94,8 +114,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-sidebar-border p-4">
-          <div className="flex items-center gap-3 rounded-lg bg-accent/50 px-3 py-2">
+        <div className="absolute bottom-0 left-0 right-0 border-t border-sidebar-border bg-sidebar p-3">
+          <div className="flex items-center gap-3 rounded-lg bg-accent/50 px-3 py-2.5">
             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
               <span className="text-xs font-semibold text-primary">DC</span>
             </div>

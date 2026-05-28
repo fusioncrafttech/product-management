@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   Calendar,
   DollarSign,
@@ -8,18 +7,17 @@ import {
   Clock,
   Plus,
 } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/common/StatsCard";
+import { AnimatedSection } from "@/components/common/AnimatedSection";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RevenueChart, AppointmentsTrendChart } from "@/components/charts";
+import { getStatusVariant } from "@/lib/variants";
 import { appointments } from "@/data/appointments";
 import { reportsData } from "@/data/reports";
-
-const revenueData = reportsData.monthlyRevenue;
-const appointmentData = reportsData.appointmentStats;
 
 export default function Dashboard() {
   const recentAppointments = appointments.slice(0, 5);
@@ -38,7 +36,7 @@ export default function Dashboard() {
       </PageHeader>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Appointments"
           value="156"
@@ -73,80 +71,24 @@ export default function Dashboard() {
       </div>
 
       {/* Charts */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Appointment Analytics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={appointmentData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--color-card)",
-                      border: "1px solid var(--color-border)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Bar dataKey="completed" fill="#2563eb" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="cancelled" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Revenue Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--color-card)",
-                      border: "1px solid var(--color-border)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#2563eb"
-                    strokeWidth={2}
-                    dot={{ fill: "#2563eb", r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+        <AppointmentsTrendChart
+          data={reportsData.appointmentStats}
+          title="Appointment Analytics"
+          height={260}
+        />
+        <RevenueChart
+          data={reportsData.monthlyRevenue}
+          title="Revenue Overview"
+          height={260}
+        />
       </div>
 
       {/* Recent Appointments & Upcoming */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <motion.div
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        <AnimatedSection
           className="lg:col-span-2"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
+          delay={0.3}
         >
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -173,7 +115,7 @@ export default function Dashboard() {
                       <TableCell className="hidden sm:table-cell">{apt.doctor}</TableCell>
                       <TableCell className="hidden md:table-cell">{apt.service}</TableCell>
                       <TableCell>
-                        <Badge variant={apt.status}>{apt.status}</Badge>
+                        <Badge variant={getStatusVariant("appointment", apt.status)}>{apt.status}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -181,12 +123,10 @@ export default function Dashboard() {
               </Table>
             </CardContent>
           </Card>
-        </motion.div>
+        </AnimatedSection>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
+        <AnimatedSection
+          delay={0.4}
         >
           <Card className="h-full">
             <CardHeader>
@@ -209,15 +149,11 @@ export default function Dashboard() {
               ))}
             </CardContent>
           </Card>
-        </motion.div>
+        </AnimatedSection>
       </div>
 
       {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.5 }}
-      >
+      <AnimatedSection delay={0.5}>
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Quick Actions</CardTitle>
@@ -243,7 +179,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-      </motion.div>
+      </AnimatedSection>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useCallback } from "react";
+import toast from "react-hot-toast";
 import { MessageSquare, Eye, Reply, AlertTriangle, Clock, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SearchBar } from "@/components/common/SearchBar";
 import { FilterDropdown } from "@/components/common/FilterDropdown";
 import { StatsCard } from "@/components/common/StatsCard";
+import { EmptyState } from "@/components/common/EmptyState";
+import { Pagination } from "@/components/common/Pagination";
+import { SortableHeader } from "@/components/common/SortableHeader";
+import { AnimatedSection } from "@/components/common/AnimatedSection";
+import { FormField } from "@/components/common/FormField";
+import { useTableState } from "@/hooks/useTableState";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { getStatusVariant } from "@/lib/variants";
 import { inquiries, type Inquiry } from "@/data/inquiries";
 
 const statusOptions = [
@@ -28,30 +35,29 @@ const priorityOptions = [
   { label: "Low", value: "low" },
 ];
 
-function getStatusVariant(status: string) {
-  switch (status) {
-    case "new": return "confirmed" as const;
-    case "replied": return "completed" as const;
-    case "closed": return "secondary" as const;
-    default: return "secondary" as const;
-  }
-}
-
-function getPriorityVariant(priority: string) {
-  switch (priority) {
-    case "high": return "cancelled" as const;
-    case "medium": return "warning" as const;
-    case "low": return "secondary" as const;
-    default: return "secondary" as const;
-  }
-}
-
 export default function Inquiry() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [replyText, setReplyText] = useState("");
+
+  const { errors, touched, validateAll, setFieldTouched, reset } = useFormValidation({
+    reply: { required: true, minLength: 10 },
+  });
+
+  const handleCloseDetail = useCallback(() => {
+    setIsDetailOpen(false);
+    setReplyText("");
+    reset();
+  }, [reset]);
+
+  const handleSendReply = () => {
+    if (!validateAll({ reply: replyText })) return;
+    toast.success("Reply sent successfully");
+    handleCloseDetail();
+  };
 
   const filteredInquiries = inquiries.filter((inq) => {
     const matchesSearch =
@@ -61,6 +67,36 @@ export default function Inquiry() {
     const matchesPriority = priorityFilter === "all" || inq.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
   });
+
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedData,
+    sortConfig,
+    handleSort,
+    resetPage,
+    itemsPerPage,
+    totalItems,
+  } = useTableState({
+    data: filteredInquiries as unknown as Record<string, unknown>[],
+    itemsPerPage: 7,
+  });
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    resetPage();
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    resetPage();
+  };
+
+  const handlePriorityChange = (value: string) => {
+    setPriorityFilter(value);
+    resetPage();
+  };
 
   const newCount = inquiries.filter((i) => i.status === "new").length;
   const highPriorityCount = inquiries.filter((i) => i.priority === "high").length;
@@ -77,93 +113,155 @@ export default function Inquiry() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <SearchBar
-          placeholder="Search inquiries..."
-          value={search}
-          onChange={setSearch}
-          className="sm:w-72"
-        />
-        <FilterDropdown
-          placeholder="Status"
-          options={statusOptions}
-          value={statusFilter}
-          onChange={setStatusFilter}
-        />
-        <FilterDropdown
-          placeholder="Priority"
-          options={priorityOptions}
-          value={priorityFilter}
-          onChange={setPriorityFilter}
-        />
-      </div>
+      <AnimatedSection>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <SearchBar
+            placeholder="Search inquiries..."
+            value={search}
+            onChange={handleSearchChange}
+            className="sm:w-72"
+          />
+          <FilterDropdown
+            placeholder="Status"
+            options={statusOptions}
+            value={statusFilter}
+            onChange={handleStatusChange}
+          />
+          <FilterDropdown
+            placeholder="Priority"
+            options={priorityOptions}
+            value={priorityFilter}
+            onChange={handlePriorityChange}
+          />
+        </div>
+      </AnimatedSection>
 
       {/* Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
+      <AnimatedSection delay={0.1}>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Inquiries ({filteredInquiries.length})</CardTitle>
+            <CardTitle className="text-base">Inquiries ({totalItems})</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead className="hidden md:table-cell">Date</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInquiries.map((inquiry) => (
-                  <TableRow key={inquiry.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{inquiry.patientName}</p>
-                        <p className="text-xs text-muted-foreground">{inquiry.email}</p>
+            {totalItems === 0 ? (
+              <EmptyState
+                title="No inquiries found"
+                description="Try adjusting your search or filters to find what you're looking for."
+              />
+            ) : (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>
+                          <SortableHeader label="Patient" sortKey="patientName" currentSort={sortConfig} onSort={handleSort} />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader label="Subject" sortKey="subject" currentSort={sortConfig} onSort={handleSort} />
+                        </TableHead>
+                        <TableHead className="hidden md:table-cell">
+                          <SortableHeader label="Date" sortKey="date" currentSort={sortConfig} onSort={handleSort} />
+                        </TableHead>
+                        <TableHead>Priority</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(paginatedData as unknown as typeof inquiries).map((inquiry) => (
+                        <TableRow key={inquiry.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{inquiry.patientName}</p>
+                              <p className="text-xs text-muted-foreground">{inquiry.email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate">{inquiry.subject}</TableCell>
+                          <TableCell className="hidden md:table-cell">{inquiry.date}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant("priority", inquiry.priority)}>{inquiry.priority}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant("inquiry", inquiry.status)}>{inquiry.status}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => {
+                                  setSelectedInquiry(inquiry);
+                                  setIsDetailOpen(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Reply className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="sm:hidden space-y-3">
+                  {(paginatedData as unknown as typeof inquiries).map((inquiry) => (
+                    <div key={inquiry.id} className="rounded-lg border border-border p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-2">
+                          <Badge variant={getStatusVariant("priority", inquiry.priority)}>{inquiry.priority}</Badge>
+                          <Badge variant={getStatusVariant("inquiry", inquiry.status)}>{inquiry.status}</Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{inquiry.date}</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">{inquiry.subject}</TableCell>
-                    <TableCell className="hidden md:table-cell">{inquiry.date}</TableCell>
-                    <TableCell>
-                      <Badge variant={getPriorityVariant(inquiry.priority)}>{inquiry.priority}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(inquiry.status)}>{inquiry.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
+                      <div>
+                        <p className="font-medium text-foreground">{inquiry.patientName}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">{inquiry.subject}</p>
+                      </div>
+                      <div className="flex gap-2 pt-2 border-t border-border">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
+                          className="flex-1"
                           onClick={() => {
                             setSelectedInquiry(inquiry);
                             setIsDetailOpen(true);
                           }}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="mr-1 h-3.5 w-3.5" />
+                          View
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Reply className="h-4 w-4" />
+                        <Button variant="outline" size="sm" className="flex-1">
+                          <Reply className="mr-1 h-3.5 w-3.5" />
+                          Reply
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  ))}
+                </div>
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )}
           </CardContent>
         </Card>
-      </motion.div>
+      </AnimatedSection>
 
       {/* Inquiry Detail Modal */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+      <Dialog open={isDetailOpen} onOpenChange={(open) => { if (!open) handleCloseDetail(); else setIsDetailOpen(true); }}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle>{selectedInquiry?.subject}</DialogTitle>
@@ -174,10 +272,10 @@ export default function Inquiry() {
           {selectedInquiry && (
             <div className="space-y-4 py-4">
               <div className="flex gap-2">
-                <Badge variant={getPriorityVariant(selectedInquiry.priority)}>
+                <Badge variant={getStatusVariant("priority", selectedInquiry.priority)}>
                   {selectedInquiry.priority} priority
                 </Badge>
-                <Badge variant={getStatusVariant(selectedInquiry.status)}>
+                <Badge variant={getStatusVariant("inquiry", selectedInquiry.status)}>
                   {selectedInquiry.status}
                 </Badge>
               </div>
@@ -188,15 +286,20 @@ export default function Inquiry() {
                 <p>Email: {selectedInquiry.email}</p>
                 <p>Phone: {selectedInquiry.phone}</p>
               </div>
-              <div className="grid gap-2">
-                <Label>Reply</Label>
-                <Textarea placeholder="Type your reply here..." />
-              </div>
+              <FormField label="Reply" required error={errors.reply} touched={touched.reply}>
+                <Textarea
+                  placeholder="Type your reply here..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onBlur={() => setFieldTouched("reply", replyText)}
+                  className={touched.reply && errors.reply ? "border-destructive focus-visible:ring-destructive" : ""}
+                />
+              </FormField>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDetailOpen(false)}>Close</Button>
-            <Button onClick={() => setIsDetailOpen(false)}>Send Reply</Button>
+            <Button variant="outline" onClick={handleCloseDetail}>Close</Button>
+            <Button onClick={handleSendReply} disabled={!replyText.trim()}>Send Reply</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

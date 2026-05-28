@@ -29,11 +29,11 @@ export function StatsCard({
       transition={{ duration: 0.3 }}
     >
       <Card className={cn("hover:shadow-md transition-shadow duration-200", className)}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">{title}</p>
-              <p className="text-2xl font-bold text-foreground">{value}</p>
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-0.5 sm:space-y-1 min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{value}</p>
               {trend && (
                 <p
                   className={cn(
@@ -45,8 +45,8 @@ export function StatsCard({
                 </p>
               )}
             </div>
-            <div className={cn("rounded-xl bg-primary/10 p-3", iconColor.includes("text-") ? "" : "")}>
-              <Icon className={cn("h-6 w-6", iconColor)} />
+            <div className={cn("rounded-xl bg-primary/10 p-2.5 sm:p-3 shrink-0", iconColor.includes("text-") ? "" : "")}>
+              <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", iconColor)} />
             </div>
           </div>
         </CardContent>

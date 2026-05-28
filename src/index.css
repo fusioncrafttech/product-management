@@ -70,11 +70,40 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    --toast-bg: #fff;
+    --toast-color: #363636;
+  }
+  .dark body,
+  body.dark {
+    --toast-bg: #1e293b;
+    --toast-color: #f1f5f9;
   }
 }
 
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
+  }
+
+  /* Touch-friendly tap areas */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Safe area padding for mobile devices with notches */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Prevent content shift on scrollbar appearance */
+  .stable-scrollbar {
+    scrollbar-gutter: stable;
   }
 }

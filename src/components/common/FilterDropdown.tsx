@@ -11,7 +11,7 @@ interface FilterDropdownProps {
 export function FilterDropdown({ placeholder, options, value, onChange, className }: FilterDropdownProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={className || "w-[160px]"}>
+      <SelectTrigger className={className || "w-full sm:w-[160px]"}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

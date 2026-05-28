@@ -1,32 +1,63 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Plus, Search, Star, Phone, Mail, Edit, Grid3X3, List } from "lucide-react";
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { Plus, Star, Phone, Mail, Edit, Grid3X3, List, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SearchBar } from "@/components/common/SearchBar";
+import { AnimatedSection } from "@/components/common/AnimatedSection";
+import { FormField } from "@/components/common/FormField";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { getStatusVariant } from "@/lib/variants";
 import { doctors } from "@/data/doctors";
 
-function getAvailabilityVariant(status: string) {
-  switch (status) {
-    case "available": return "completed" as const;
-    case "busy": return "warning" as const;
-    case "off-duty": return "secondary" as const;
-    default: return "secondary" as const;
-  }
-}
-
 export default function Doctors() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    specialization: "",
+    experience: "",
+    email: "",
+    phone: "",
+  });
+
+  const { errors, touched, validateAll, setFieldTouched, reset } = useFormValidation({
+    name: { required: true, minLength: 2 },
+    specialization: { required: true },
+    experience: { required: true, pattern: { value: /^\d+$/, message: "Must be a number" } },
+    email: { required: true, pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email" } },
+    phone: { required: true, pattern: { value: /^[+]?[\d\s()-]{7,}$/, message: "Enter a valid phone number" } },
+  });
+
+  const updateField = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setFormData({ name: "", specialization: "", experience: "", email: "", phone: "" });
+    reset();
+  }, [reset]);
+
+  const handleSave = () => {
+    if (!validateAll(formData)) return;
+    toast.success("Doctor profile saved successfully");
+    handleCloseModal();
+  };
+
+  const isFormEmpty = !formData.name && !formData.email && !formData.specialization;
 
   const filteredDoctors = doctors.filter(
     (doc) =>
@@ -70,11 +101,9 @@ export default function Doctors() {
         <TabsContent value="cards">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredDoctors.map((doctor, index) => (
-              <motion.div
+              <AnimatedSection
                 key={doctor.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                delay={index * 0.05}
               >
                 <Card className="hover:shadow-md transition-shadow duration-200">
                   <CardContent className="p-6">
@@ -90,7 +119,7 @@ export default function Doctors() {
                           <p className="text-sm text-muted-foreground">{doctor.specialization}</p>
                         </div>
                       </div>
-                      <Badge variant={getAvailabilityVariant(doctor.availability)}>
+                      <Badge variant={getStatusVariant("availability", doctor.availability)}>
                         {doctor.availability}
                       </Badge>
                     </div>
@@ -116,14 +145,20 @@ export default function Doctors() {
                       <span className="text-sm text-muted-foreground">
                         {doctor.patients} patients
                       </span>
-                      <Button variant="outline" size="sm">
-                        <Edit className="mr-1 h-3 w-3" />
-                        Edit
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/admin/doctors/${doctor.id}`)}>
+                          <Eye className="mr-1 h-3 w-3" />
+                          View
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Edit className="mr-1 h-3 w-3" />
+                          Edit
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </AnimatedSection>
             ))}
           </div>
         </TabsContent>
@@ -164,15 +199,20 @@ export default function Doctors() {
                       <TableCell className="hidden md:table-cell">{doctor.experience} years</TableCell>
                       <TableCell className="hidden lg:table-cell">{doctor.phone}</TableCell>
                       <TableCell>
-                        <Badge variant={getAvailabilityVariant(doctor.availability)}>
+                        <Badge variant={getStatusVariant("availability", doctor.availability)}>
                           {doctor.availability}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">{doctor.patients}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/doctors/${doctor.id}`)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -184,21 +224,26 @@ export default function Doctors() {
       </Tabs>
 
       {/* Add Doctor Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog open={isModalOpen} onOpenChange={(open) => { if (!open) handleCloseModal(); else setIsModalOpen(true); }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add New Doctor</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="doc-name">Full Name</Label>
-              <Input id="doc-name" placeholder="Dr. Full Name" />
-            </div>
+            <FormField label="Full Name" htmlFor="doc-name" required error={errors.name} touched={touched.name}>
+              <Input
+                id="doc-name"
+                placeholder="Dr. Full Name"
+                value={formData.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                onBlur={() => setFieldTouched("name", formData.name)}
+                className={touched.name && errors.name ? "border-destructive focus-visible:ring-destructive" : ""}
+              />
+            </FormField>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="doc-spec">Specialization</Label>
-                <Select>
-                  <SelectTrigger>
+              <FormField label="Specialization" htmlFor="doc-spec" required error={errors.specialization} touched={touched.specialization}>
+                <Select value={formData.specialization} onValueChange={(val) => { updateField("specialization", val); setFieldTouched("specialization", val); }}>
+                  <SelectTrigger className={touched.specialization && errors.specialization ? "border-destructive focus-visible:ring-destructive" : ""}>
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -210,26 +255,46 @@ export default function Doctors() {
                     <SelectItem value="pedo">Pediatric Dentist</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="doc-exp">Experience (years)</Label>
-                <Input id="doc-exp" type="number" placeholder="0" />
-              </div>
+              </FormField>
+              <FormField label="Experience (years)" htmlFor="doc-exp" required error={errors.experience} touched={touched.experience}>
+                <Input
+                  id="doc-exp"
+                  type="number"
+                  placeholder="0"
+                  value={formData.experience}
+                  onChange={(e) => updateField("experience", e.target.value)}
+                  onBlur={() => setFieldTouched("experience", formData.experience)}
+                  className={touched.experience && errors.experience ? "border-destructive focus-visible:ring-destructive" : ""}
+                />
+              </FormField>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="doc-email">Email</Label>
-                <Input id="doc-email" type="email" placeholder="doctor@clinic.com" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="doc-phone">Phone</Label>
-                <Input id="doc-phone" placeholder="+1 (555) 000-0000" />
-              </div>
+              <FormField label="Email" htmlFor="doc-email" required error={errors.email} touched={touched.email}>
+                <Input
+                  id="doc-email"
+                  type="email"
+                  placeholder="doctor@clinic.com"
+                  value={formData.email}
+                  onChange={(e) => updateField("email", e.target.value)}
+                  onBlur={() => setFieldTouched("email", formData.email)}
+                  className={touched.email && errors.email ? "border-destructive focus-visible:ring-destructive" : ""}
+                />
+              </FormField>
+              <FormField label="Phone" htmlFor="doc-phone" required error={errors.phone} touched={touched.phone}>
+                <Input
+                  id="doc-phone"
+                  placeholder="+1 (555) 000-0000"
+                  value={formData.phone}
+                  onChange={(e) => updateField("phone", e.target.value)}
+                  onBlur={() => setFieldTouched("phone", formData.phone)}
+                  className={touched.phone && errors.phone ? "border-destructive focus-visible:ring-destructive" : ""}
+                />
+              </FormField>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button onClick={() => setIsModalOpen(false)}>Add Doctor</Button>
+            <Button variant="outline" onClick={handleCloseModal}>Cancel</Button>
+            <Button onClick={handleSave} disabled={isFormEmpty}>Add Doctor</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
