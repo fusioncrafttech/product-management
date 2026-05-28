@@ -13,6 +13,10 @@ import {
   Settings,
   X,
   Activity,
+  Users,
+  FileText,
+  DollarSign,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +24,10 @@ const navItems = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { label: "Appointments", path: "/admin/appointments", icon: Calendar },
   { label: "Billing", path: "/admin/billing", icon: Receipt },
+  { label: "Patients", path: "/admin/patients", icon: Users },
+  { label: "Treatments", path: "/admin/treatment-records", icon: FileText },
+  { label: "Payments", path: "/admin/payments", icon: DollarSign },
+  { label: "Revenue", path: "/admin/revenue", icon: TrendingUp },
   { label: "Doctors", path: "/admin/doctors", icon: Stethoscope },
   { label: "Services", path: "/admin/services", icon: Wrench },
   { label: "Inquiry", path: "/admin/inquiry", icon: MessageSquare },
